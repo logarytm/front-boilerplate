@@ -4,20 +4,27 @@ const csso = require('gulp-csso');
 const htmlmin = require('gulp-htmlmin');
 const autoprefixer = require('gulp-autoprefixer');
 const uglify = require('gulp-uglify');
+const rev = require('gulp-rev');
+const revReplace = require('gulp-rev-replace');
+const del = require('del');
 
 const targetDir = 'dist';
 const htmlFiles = 'src/**/*.html';
 const scssFiles = 'src/scss/**/*.scss';
 const jsFiles = 'src/js/**/*.js';
 
-gulp.task('default', ['html', 'sass', 'js']);
+gulp.task('default', ['html']);
 
 gulp.task('sass', () => {
     return gulp.src(scssFiles)
         .pipe(sass().on('error', sass.logError))
         .pipe(autoprefixer())
         .pipe(csso())
+        .pipe(rev())
         .pipe(gulp.dest(`${targetDir}/css`))
+        .pipe(rev.manifest({ path: 'rev-manifest-sass.json' }))
+        .pipe(gulp.dest('.'))
+    ;
 });
 
 gulp.task('watch', () => {
@@ -29,10 +36,14 @@ gulp.task('watch', () => {
 gulp.task('js', () => {
     return gulp.src(jsFiles)
         .pipe(uglify())
-        .pipe(gulp.dest(`${targetDir}/js`));
+        .pipe(rev())
+        .pipe(gulp.dest(`${targetDir}/js`))
+        .pipe(rev.manifest({ path: 'rev-manifest-js.json' }))
+        .pipe(gulp.dest('.'))
+    ;
 });
 
-gulp.task('html', () => {
+gulp.task('html', ['sass', 'js'], () => {
     return gulp.src(htmlFiles)
         .pipe(htmlmin({
             collapseBooleanAttributes: true,
@@ -42,5 +53,12 @@ gulp.task('html', () => {
             minifyCSS: true,
             minifyJS: true,
         }))
-        .pipe(gulp.dest(targetDir));
+        .pipe(revReplace({ manifest: gulp.src('./rev-manifest-js.json') }))
+        .pipe(revReplace({ manifest: gulp.src('./rev-manifest-sass.json') }))
+        .pipe(gulp.dest(targetDir))
+    ;
+});
+
+gulp.task('clean', () => {
+    del([`${targetDir}/*`, `!${targetDir}/.gitkeep`, `rev-manifest*.json`]);
 });
