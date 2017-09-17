@@ -32,6 +32,7 @@ gulp.task('watch', () => {
     gulp.watch(htmlFiles, ['html']);
     gulp.watch(scssFiles, ['sass']);
     gulp.watch(jsFiles, ['js']);
+    gulp.watch(otherFiles, ['copy']);
 });
 
 gulp.task('js', () => {
