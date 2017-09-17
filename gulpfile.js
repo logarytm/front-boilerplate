@@ -12,8 +12,9 @@ const targetDir = 'dist';
 const htmlFiles = 'src/**/*.html';
 const scssFiles = 'src/scss/**/*.scss';
 const jsFiles = 'src/js/**/*.js';
+const otherFiles = ['src/**/*'].concat([htmlFiles, scssFiles, jsFiles].map((pattern) => `!${pattern}`));
 
-gulp.task('default', ['html']);
+gulp.task('default', ['html', 'copy']);
 
 gulp.task('sass', () => {
     return gulp.src(scssFiles)
@@ -57,6 +58,11 @@ gulp.task('html', ['sass', 'js'], () => {
         .pipe(revReplace({ manifest: gulp.src('./rev-manifest-sass.json') }))
         .pipe(gulp.dest(targetDir))
     ;
+});
+
+gulp.task('copy', () => {
+    return gulp.src(otherFiles)
+        .pipe(gulp.dest(targetDir));
 });
 
 gulp.task('clean', () => {
